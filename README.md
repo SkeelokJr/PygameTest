@@ -13,5 +13,3 @@ to make sure you can make a file with:\n\n
 import pygame\n
 print(pygame.ver)
 "
-
-put the piece images in a folder named "Piece_Images"
