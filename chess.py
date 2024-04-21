@@ -126,7 +126,16 @@ def getMoves(piece):
             if file <= 6 and rank >= 2 and (not other or not other["color"] == color):
                 moves.append((file+1, rank-2))
         case "bishop":
-            pass
+            for d in range(1, min(8-file, 8-rank)): # top right diagonal
+                other = getPieceAt(file+d, rank+d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file+d, rank+d))
+                        break
+                else:
+                    moves.append((file+d, rank+d))
         case "rook":
             pass
         case "queen":
@@ -208,8 +217,8 @@ def clearHighlights():
 
 def setBoard():
     for i in range(8):
-        createPiece("white", "knight", i, 1)
-        createPiece("black", "knight", i, 6)
+        createPiece("white", "bishop", i, 1)
+        createPiece("black", "bishop", i, 6)
     createPiece("white", "pawn", 2, 2)
     createPiece("white", "pawn", 3, 3)
     createPiece("black", "pawn", 5, 2)
