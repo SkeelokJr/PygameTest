@@ -20,7 +20,8 @@ boardMiddle = pygame.Rect(boardX+boardBorderWidth, boardY+boardBorderWidth, boar
 numSquares = 64
 lightColor = pygame.Color(255,255,255)
 darkColor = pygame.Color(31,31,127)
-hoverColor = pygame.Color(200,200,200)
+hoverColor = pygame.Color(127,127,127)
+moveColor = pygame.Color(255,255,0)
 boardGap = 50
 Squares = []
 for i in range(numSquares):
@@ -57,18 +58,17 @@ def drawBoard():
 def drawSquares():
     for s in Squares:
         if s["highlight_color"]:
-            pygame.draw.rect(screen, s["color"].lerp(s["highlight_color"][-1], 0.5), s["rect"])
+            pygame.draw.rect(screen, s["color"].lerp(s["highlight_color"][-1], 0.2), s["rect"])
         else:
             pygame.draw.rect(screen, s["color"], s["rect"])
 
 def getPieceAt(file, rank):
-    if file >= 0 and file <= 7 and rank >= 0  and rank <= 7:
     for piece in Pieces:
         if piece["file"] == file and piece["rank"] == rank:
             return piece
     return None
 
-def getMovesOfPiece(piece):
+def getMoves(piece):
     moves = []
     file, rank = piece["file"], piece["rank"]
     color = piece["color"]
@@ -101,7 +101,30 @@ def getMovesOfPiece(piece):
                     if other and other["color"] == "white":
                         moves.append((file+1,rank-1))
         case "knight":
-            if not getPieceAt(file+1)
+            other = getPieceAt(file-2, rank+1)
+            if file >= 2 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file-2, rank+1))
+            other = getPieceAt(file-1, rank+2)
+            if file >= 1 and rank <= 5 and (not other or not other["color"] == color):
+                moves.append((file-1, rank+2))
+            other = getPieceAt(file+2, rank+1)
+            if file <= 5 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file+2, rank+1))
+            other = getPieceAt(file+1, rank+2)
+            if file <= 6 and rank <= 5 and (not other or not other["color"] == color):
+                moves.append((file+1, rank+2))
+            other = getPieceAt(file-2, rank-1)
+            if file >= 2 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file-2, rank-1))
+            other = getPieceAt(file-1, rank-2)
+            if file >= 1 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file-1, rank-2))
+            other = getPieceAt(file+2, rank-1)
+            if file <= 5 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file+2, rank-1))
+            other = getPieceAt(file+1, rank-2)
+            if file <= 6 and rank >= 2 and (not other or not other["color"] == color):
+                moves.append((file+1, rank-2))
         case "bishop":
             pass
         case "rook":
@@ -111,9 +134,6 @@ def getMovesOfPiece(piece):
         case "king":
             pass
     return moves
-
-        
-
 
 def createPiece(color, type, file, rank):
     fil = ""
@@ -151,14 +171,7 @@ def createPiece(color, type, file, rank):
     }
     Pieces.append(pieceData)
 
-def setBoard():
-    for i in range(8):
-        createPiece("white", "pawn", i, 1)
-        createPiece("black", "pawn", i, 6)
-    createPiece("white", "pawn", 2, 2)
-    createPiece("white", "pawn", 3, 3)
-    createPiece("black", "pawn", 5, 2)
-    createPiece("black", "pawn", 6, 3)
+
 
 def drawPieces():
     for piece in Pieces:
@@ -179,7 +192,10 @@ def getMouseInfo():
     mouseFile, mouseRank = mouseLoc[0], mouseLoc[1]
     for piece in Pieces:
         if piece["file"] == mouseFile and piece["rank"] == mouseRank:
-            print(getMovesOfPiece(piece))
+            moves = getMoves(piece)
+            print(*moves)
+            for move in moves:
+                highlightSquare(*move, moveColor)
 
 def highlightSquare(file, rank, color):
     for square in Squares:
@@ -189,6 +205,16 @@ def highlightSquare(file, rank, color):
 def clearHighlights():
     for square in Squares:
         square["highlight_color"].clear()
+
+def setBoard():
+    for i in range(8):
+        createPiece("white", "knight", i, 1)
+        createPiece("black", "knight", i, 6)
+    createPiece("white", "pawn", 2, 2)
+    createPiece("white", "pawn", 3, 3)
+    createPiece("black", "pawn", 5, 2)
+    createPiece("black", "pawn", 6, 3)
+    createPiece("white", "pawn", 4, 7)
 
 setBoard()
 
