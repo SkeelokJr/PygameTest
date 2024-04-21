@@ -62,6 +62,7 @@ def drawSquares():
             pygame.draw.rect(screen, s["color"], s["rect"])
 
 def getPieceAt(file, rank):
+    if file >= 0 and file <= 7 and rank >= 0  and rank <= 7:
     for piece in Pieces:
         if piece["file"] == file and piece["rank"] == rank:
             return piece
@@ -100,7 +101,7 @@ def getMovesOfPiece(piece):
                     if other and other["color"] == "white":
                         moves.append((file+1,rank-1))
         case "knight":
-            pass
+            if not getPieceAt(file+1)
         case "bishop":
             pass
         case "rook":
