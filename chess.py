@@ -52,6 +52,7 @@ mouseClicks = []
 mouseFile, mouseRank = None, None
 selectedPiece = None
 selectedFile, selectedRank = None, None
+lmbPressed, rmbPressed = False, False
 playerTurn = "white"
 boardFlipped = False
 
@@ -246,6 +247,11 @@ def getMoves(piece):
                 
     return moves
 
+def coordsFromFileRank(file, rank):
+    x = boardX + boardGap + (file*squareSize)
+    y = (boardY+boardSize) - 2*boardGap - (rank*squareSize)
+    return (x, y)
+
 def createPiece(color, type, file, rank):
     fil = ""
     if color == "white":
@@ -294,22 +300,24 @@ def coordsToFileRank(x, y):
     return (None, None)
 
 def getMouseInfo():
-    global mouseFile, mouseRank, mouseClicks
+    global mouseFile, mouseRank, mouseClicks, mouseLoc
     mousePos = pygame.mouse.get_pos()
     mouseClicks = pygame.mouse.get_pressed()
     mouseX, mouseY = mousePos[0], mousePos[1]
     mouseLoc = coordsToFileRank(mouseX, mouseY)
     mouseFile, mouseRank = mouseLoc[0], mouseLoc[1]
-    for piece in Pieces:
-        if piece["file"] == mouseFile and piece["rank"] == mouseRank:
-            moves = getMoves(piece)
-            for move in moves:
-                highlightSquare(*move, moveColor)
+    
 
 def highlightSquare(file, rank, color):
     for square in Squares:
         if square["file"] == file and square["rank"] == rank:
             square["highlight_color"].append(color)
+
+def highlightMoves(piece):
+    moves = getMoves(piece)
+    for move in moves:
+        highlightSquare(*move, moveColor)
+
 
 def clearHighlights():
     for square in Squares:
@@ -336,12 +344,50 @@ def setBoard():
     createPiece("black", "queen", 3, 7)
     createPiece("black", "king", 4, 7)
 
-def LMB_Down():
-    global selectedFile, selectedRank
-    if not selectedPiece:
-        selectedPiece = getPieceAt(mouseFile,mouseRank)
-    print("LMB pressed")
+def movePiece(position, file, rank, newFile, newRank):
+    movedPiece, capturedPiece = None, None
+    for piece in position:
+        if piece["file"] == file and piece["rank"] == rank:
+            movedPiece = piece
+        elif piece["file"] == newFile and piece["rank"] == newRank:
+            capturedPiece = piece
+    if movedPiece:
+        movedPiece["file"], movedPiece["rank"] = newFile, newRank
+        movedPiece["hasMoved"] = True
+        movedPiece["rect"].topleft = coordsFromFileRank(newFile, newRank)
+    if capturedPiece:
+        position.remove(capturedPiece)
+    return position
 
+def getAllMoves(position, color):
+    allMoves = []
+    for piece in position:
+        moves = []
+
+def checkForChecks(position):
+    pass
+
+def changeTurn():
+    global playerTurn
+    if playerTurn == "white":
+        playerTurn = "black"
+    elif playerTurn == "black":
+        playerTurn = "white"
+
+
+def LMB_Down():
+    global selectedFile, selectedRank, selectedPiece, Pieces
+    if not selectedPiece and getPieceAt(mouseFile,mouseRank) and getPieceAt(mouseFile,mouseRank)["color"] == playerTurn:
+        selectedPiece = getPieceAt(mouseFile,mouseRank)
+        selectedFile, selectedRank = mouseFile, mouseRank
+    elif selectedPiece and getPieceAt(mouseFile,mouseRank) and not getPieceAt(mouseFile, mouseRank) == selectedPiece and getPieceAt(mouseFile,mouseRank)["color"] == playerTurn:
+        selectedPiece = getPieceAt(mouseFile, mouseRank)
+    elif selectedPiece and (mouseFile, mouseRank) in getMoves(selectedPiece):
+        Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank)
+        changeTurn()
+        selectedPiece = None
+    else:
+        selectedPiece = None
 
 setBoard()
 
@@ -354,18 +400,21 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if mouseClicks[0]:
                 LMB_Down()
+    lmbPressed = False, False
     screen.fill("black")
     clearHighlights()
-
     drawBoard()
     getMouseInfo()
     highlightSquare(mouseFile, mouseRank, hoverColor)
+    if selectedPiece:
+        highlightMoves(selectedPiece)
+
     drawSquares()
     drawPieces()
     
 
     pygame.display.flip()
 
-    clock.tick(60)
+    clock.tick(20)
 
 pygame.quit()
