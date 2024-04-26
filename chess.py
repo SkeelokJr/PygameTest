@@ -333,23 +333,30 @@ def getMovesInPos(pos, file, rank, checkLegal):
                 moves.append((file-1,rank+1))
             if not piece["hasMoved"]:
                 leftFile, rightFile = None, None
-                for l in range(1, file+1):
-                    test = getPieceInPos(pos, l, rank)
-                    if test and test["type"] == "rook" and test["color"] == "white" and not test["hasMoved"]:
-                        leftFile = l
-                    elif test:
-                        break
-                for r in range(1, file-1):
-                    test = getPieceInPos(pos, r, rank)
-                    if test and test["type"] == "rook" and test["color"] == "white" and not test["hasMoved"]:
-                        rightFile = r
-                    elif test:
-                        break
+                if file >= 2 and not getPieceInPos(pos, file-1, rank):
+                    for l in range(1, file+1):
+                        test = getPieceInPos(pos, file-l, rank)
+                        if test and test["type"] == "rook" and test["color"] == color and not test["hasMoved"]:
+                            leftFile = l
+                        elif test:
+                            break
+                if file <= 5 and not getPieceInPos(pos, file+1, rank):
+                    for r in range(1, 8-file):
+                        test = getPieceInPos(pos, file+r, rank)
+                        if test and test["type"] == "rook" and test["color"] == color and not test["hasMoved"]:
+                            rightFile = r
+                        elif test:
+                            break
+                if leftFile:
+                    moves.append((file-2, rank))
+                if rightFile:
+                    moves.append((file+2, rank))
     if checkLegal:
         illegals = []
+        temp, testPos = [], []
         for move in moves:
-            testPos = copyPositionData(pos)
-            testPos = movePiece(testPos, file, rank, *move)
+            temp = copyPositionData(pos)
+            testPos = movePiece(temp, file, rank, *move)
             causesCheck = isInCheck(testPos, color)
             if causesCheck:
                 illegals.append(move)
@@ -469,12 +476,26 @@ def updatePieceImages():
     for piece in Pieces:
         piece["rect"].topleft = coordsFromFileRank(piece["file"], piece["rank"])
 
-def movePiece(pos, file, rank, newFile, newRank, ):
-    movedPiece, capturedPiece = None, None
+def movePiece(pos, file, rank, newFile, newRank):
+    movedPiece, capturedPiece, castleRook = None, None, None
     position = pos.copy()
     for piece in position:
         if piece["file"] == file and piece["rank"] == rank:
             movedPiece = piece
+        if piece["type"] == "king" and newFile == file-2: # if castling left
+            for l in range(1, file+1):
+                test1 = getPieceInPos(pos, file-l, rank)
+                if test1 and test1["type"] == "rook" and test1["color"] == piece["color"] and not test1["hasMoved"]:
+                    leftFile = file-l
+                    test1["file"] = file-1
+                    test1["hasMoved"] = True
+        elif piece["type"] == "king" and newFile == file+2: # if castling right
+            for r in range(1, 8-file):
+                test2 = getPieceInPos(pos, file+r, rank)
+                if test2 and test2["type"] == "rook" and test2["color"] == piece["color"] and not test2["hasMoved"]:
+                    rightFile = file+r
+                    test2["file"] = file+1
+                    test2["hasMoved"] = True
         elif piece["file"] == newFile and piece["rank"] == newRank:
             capturedPiece = piece
     if movedPiece:
@@ -521,7 +542,7 @@ def LMB_Down():
     elif selectedPiece and getPieceAt(mouseFile,mouseRank) and not getPieceAt(mouseFile, mouseRank) == selectedPiece and getPieceAt(mouseFile,mouseRank)["color"] == playerTurn:
         selectedPiece = getPieceAt(mouseFile, mouseRank)
         selectedMoves = getMovesInPos(Pieces, selectedFile, selectedRank, True)
-    elif selectedPiece and (mouseFile, mouseRank) in getMovesInPos(Pieces, selectedFile, selectedRank, True):
+    elif selectedPiece and selectedMoves and (mouseFile, mouseRank) in selectedMoves:
         Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank)
         changeTurn()
         selectedPiece = None
@@ -534,6 +555,7 @@ def testBoard():
     createPiece("white", "king", 4, 0)
     createPiece("white", "rook", 7, 0)
     createPiece("white", "rook", 0, 0)
+    #createPiece("white", "knight", 1, 0)
 
 #setBoard()
 testBoard()
