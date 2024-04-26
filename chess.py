@@ -225,7 +225,7 @@ def getMovesInPos(pos, file, rank, checkLegal):
                         break
                 else:
                     moves.append((file-d, rank))
-        case "queen": # basically combine a bishop and rook's moves
+        case "queen": # basically combine a bishop's and rook's moves
             for d in range(1, min(8-file, 8-rank)): # top right diagonal
                 other = getPieceInPos(pos, file+d, rank+d)
                 if other:
@@ -355,11 +355,34 @@ def getMovesInPos(pos, file, rank, checkLegal):
         illegals = []
         temp, testPos = [], []
         for move in moves:
-            temp = copyPositionData(pos)
-            testPos = movePiece(temp, file, rank, *move)
-            causesCheck = isInCheck(testPos, color)
-            if causesCheck:
-                illegals.append(move)
+            if piece["type"] == "king" and move[0] == file-2:
+                test1 = movePiece(temp, file, rank, file-1, rank)
+                test2 = movePiece(temp, file, rank, file-2, rank)
+                if isInCheck(copyPositionData(pos), color):
+                    print("boom1")
+                    illegals.append(move)
+                elif isInCheck(movePiece(copyPositionData(pos), file, rank, file-1, rank), color):
+                    print("boom2")
+                    illegals.append(move)
+                elif isInCheck(movePiece(copyPositionData(pos), file, rank, file-2, rank), color):
+                    print("boom3")
+                    illegals.append(move)
+            elif piece["type"] == "king" and move[0] == file+2:
+                print(getPieceInPos(copyPositionData(pos), 2, 4))
+                if isInCheck(copyPositionData(pos), color):
+                    print("boom1")
+                    illegals.append(move)
+                elif isInCheck(movePiece(copyPositionData(pos), file, rank, file+1, rank), color):
+                    print("boom2")
+                    illegals.append(move)
+                elif isInCheck(movePiece(copyPositionData(pos), file, rank, file+2, rank), color):
+                    print("boom3")
+                    illegals.append(move)
+            else:
+                testPos = movePiece(copyPositionData(pos), file, rank, *move)
+                causesCheck = isInCheck(testPos, color)
+                if causesCheck:
+                    illegals.append(move)
         for move in illegals:
             moves.remove(move)
     return moves
@@ -521,6 +544,7 @@ def isInCheck(pos, color):
         if piece["type"] == "king" and piece["color"]:
             kingLocation = (piece["file"], piece["rank"])
     if kingLocation:
+        print("ok")
         for move in getAllMoves(pos, otherColor(color), False):
             if move[2:] == kingLocation:
                 return True
@@ -543,7 +567,7 @@ def LMB_Down():
         selectedPiece = getPieceAt(mouseFile, mouseRank)
         selectedMoves = getMovesInPos(Pieces, selectedFile, selectedRank, True)
     elif selectedPiece and selectedMoves and (mouseFile, mouseRank) in selectedMoves:
-        Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank)
+        Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank).copy()
         changeTurn()
         selectedPiece = None
         selectedMoves = []
@@ -555,10 +579,10 @@ def testBoard():
     createPiece("white", "king", 4, 0)
     createPiece("white", "rook", 7, 0)
     createPiece("white", "rook", 0, 0)
-    #createPiece("white", "knight", 1, 0)
+    createPiece("black", "bishop", 0, 6)
 
-#setBoard()
-testBoard()
+setBoard()
+#testBoard()
 
 while running:
     events = pygame.event.get()
