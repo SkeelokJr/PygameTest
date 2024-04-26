@@ -244,7 +244,186 @@ def getMoves(piece):
             other = getPieceAt(file-1, rank+1) # up left
             if file >= 1 and rank <= 6 and (not other or not other["color"] == color):
                 moves.append((file-1,rank+1))
-                
+    return moves
+
+def getPieceInPos(pos, file, rank):
+    for piece in pos:
+        if piece["file"] == file and piece["rank"] == rank:
+            return piece
+    return None
+
+def getMovesInPos(pos, file, rank):
+    moves = []
+    piece = getPieceInPos(pos, file, rank)
+    file, rank = piece["file"], piece["rank"]
+    color = piece["color"]
+    match piece["type"]:
+        case "pawn":
+            if color == "white":
+                if not getPieceInPos(pos, file, rank+1) and rank < 7: 
+                    moves.append((file, rank+1))
+                    if not piece["hasMoved"] and rank < 6 and not getPieceInPos(pos, file, rank+2):
+                        moves.append((file, rank+2))
+                if file > 0 and rank < 7:
+                    other = getPieceInPos(pos, file-1, rank+1)
+                    if other and other["color"] == "black":
+                        moves.append((file-1,rank+1))
+                if file < 7 and rank < 7:
+                    other = getPieceInPos(pos, file+1, rank+1)
+                    if other and other["color"] == "black":
+                        moves.append((file+1,rank+1))
+            else:
+                if not getPieceInPos(pos, file, rank-1) and rank > 0: 
+                    moves.append((file, rank-1))
+                    if not piece["hasMoved"] and rank > 1 and not getPieceInPos(pos, file, rank-2):
+                        moves.append((file, rank-2))
+                if file > 0 and rank > 0:
+                    other = getPieceInPos(pos, file-1, rank-1)
+                    if other and other["color"] == "white":
+                        moves.append((file-1,rank-1))
+                if file < 7 and rank > 0:
+                    other = getPieceInPos(pos, file+1, rank-1)
+                    if other and other["color"] == "white":
+                        moves.append((file+1,rank-1))
+        case "knight":
+            other = getPieceInPos(pos, file-2, rank+1)
+            if file >= 2 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file-2, rank+1))
+            other = getPieceInPos(pos, file-1, rank+2)
+            if file >= 1 and rank <= 5 and (not other or not other["color"] == color):
+                moves.append((file-1, rank+2))
+            other = getPieceInPos(pos, file+2, rank+1)
+            if file <= 5 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file+2, rank+1))
+            other = getPieceInPos(pos, file+1, rank+2)
+            if file <= 6 and rank <= 5 and (not other or not other["color"] == color):
+                moves.append((file+1, rank+2))
+            other = getPieceInPos(pos, file-2, rank-1)
+            if file >= 2 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file-2, rank-1))
+            other = getPieceInPos(pos, file-1, rank-2)
+            if file >= 1 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file-1, rank-2))
+            other = getPieceInPos(pos, file+2, rank-1)
+            if file <= 5 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file+2, rank-1))
+            other = getPieceInPos(pos, file+1, rank-2)
+            if file <= 6 and rank >= 2 and (not other or not other["color"] == color):
+                moves.append((file+1, rank-2))
+        case "bishop":
+            for d in range(1, min(8-file, 8-rank)): # top right diagonal
+                other = getPieceInPos(pos, file+d, rank+d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file+d, rank+d))
+                        break
+                else:
+                    moves.append((file+d, rank+d))
+            for d in range(1, min(8-file, rank+1)): # bottom right diagonal
+                other = getPieceInPos(pos, file+d, rank-d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file+d, rank-d))
+                        break
+                else:
+                    moves.append((file+d, rank-d))
+            for d in range(1, min(file+1, 8-rank)): # top left diagonal
+                other = getPieceInPos(pos, file-d, rank+d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file-d, rank+d))
+                        break
+                else:
+                    moves.append((file-d, rank+d))
+            for d in range(1, min(file+1, rank+1)): # bottom left diagonal
+                other = getPieceInPos(pos, file-d, rank-d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file-d, rank-d))
+                        break
+                else:
+                    moves.append((file-d, rank-d))
+        case "rook":
+            for d in range(1, 8-rank): # get up moves
+                other = getPieceInPos(pos, file,rank+d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file, rank+d))
+                        break
+                else:
+                    moves.append((file, rank+d))
+            for d in range(1, 8-file): # get moves right
+                other = getPieceInPos(pos, file+d,rank)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file+d, rank))
+                        break
+                else:
+                    moves.append((file+d, rank))
+            for d in range(1, rank+1): # get down moves
+                other = getPieceInPos(pos, file,rank-d)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file, rank-d))
+                        break
+                else:
+                    moves.append((file, rank-d))
+            for d in range(1, file+1): # get left moves
+                other = getPieceInPos(pos, file-d,rank)
+                if other:
+                    if other["color"] == color:
+                        break
+                    else:
+                        moves.append((file-d, rank))
+                        break
+                else:
+                    moves.append((file-d, rank))
+        case "queen": # basically combine a bishop and rook's moves
+            bishop = {"type": "bishop", "file": file, "rank": rank, "color": color}
+            bishopMoves = getMoves(bishop)
+            rook = {"type": "rook", "file": file, "rank": rank, "color": color}
+            rookMoves = getMoves(rook)
+            moves.extend(bishopMoves)
+            moves.extend(rookMoves)
+        case "king":
+            other = getPieceInPos(pos, file, rank+1) # up
+            if rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file,rank+1))
+            other = getPieceInPos(pos, file+1, rank+1) # up right
+            if file <= 6 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file+1,rank+1))
+            other = getPieceInPos(pos, file+1, rank) # right
+            if file <= 6 and (not other or not other["color"] == color):
+                moves.append((file+1,rank))
+            other = getPieceInPos(pos, file+1, rank-1) # down right
+            if file <= 6 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file+1,rank-1))
+            other = getPieceInPos(pos, file, rank-1) # down
+            if rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file,rank-1))
+            other = getPieceInPos(pos, file-1, rank-1) # down left
+            if file >= 1 and rank >= 1 and (not other or not other["color"] == color):
+                moves.append((file-1,rank-1))
+            other = getPieceInPos(pos, file-1, rank) # left
+            if file >= 1 and (not other or not other["color"] == color):
+                moves.append((file-1,rank))
+            other = getPieceInPos(pos, file-1, rank+1) # up left
+            if file >= 1 and rank <= 6 and (not other or not other["color"] == color):
+                moves.append((file-1,rank+1))
     return moves
 
 def coordsFromFileRank(file, rank):
@@ -359,13 +538,32 @@ def movePiece(position, file, rank, newFile, newRank):
         position.remove(capturedPiece)
     return position
 
-def getAllMoves(position, color):
+def getAllMoves(pos, color):
     allMoves = []
-    for piece in position:
-        moves = []
+    for piece in pos:
+        if piece["color"] == color:
+            pFile, pRank = piece["file"], piece["rank"]
+            for move in getMovesInPos(pos, pFile, pRank):
+                allMoves.append((pFile, pRank, move[0], move[1]))
+    return allMoves
 
-def checkForChecks(position):
-    pass
+def checkForChecks(pos):
+    checkStatus = [False, False]
+    WK, BK = None, None
+    for piece in pos:
+        if piece["color"] == "white" and piece["type"] == "king":
+            WK = (piece["file"], piece["rank"])
+        elif piece["color"] == "black" and piece["type"] == "king":
+            BK = (piece["file"], piece["rank"])
+    print(WK, BK)
+    for move in getAllMoves(pos, "black"):
+        if move[2] == WK[0] and move[3] == WK[1]:
+            checkStatus[0] = True
+    for move in getAllMoves(pos, "white"):
+        if move[2] == BK[0] and move[3] == BK[1]:
+            checkStatus[1] = True
+    return checkStatus
+
 
 def changeTurn():
     global playerTurn
@@ -382,9 +580,10 @@ def LMB_Down():
         selectedFile, selectedRank = mouseFile, mouseRank
     elif selectedPiece and getPieceAt(mouseFile,mouseRank) and not getPieceAt(mouseFile, mouseRank) == selectedPiece and getPieceAt(mouseFile,mouseRank)["color"] == playerTurn:
         selectedPiece = getPieceAt(mouseFile, mouseRank)
-    elif selectedPiece and (mouseFile, mouseRank) in getMoves(selectedPiece):
+    elif selectedPiece and (mouseFile, mouseRank) in getMovesInPos(Pieces, selectedFile, selectedRank):
         Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank)
         changeTurn()
+        print(checkForChecks(Pieces))
         selectedPiece = None
     else:
         selectedPiece = None
@@ -408,7 +607,6 @@ while running:
     highlightSquare(mouseFile, mouseRank, hoverColor)
     if selectedPiece:
         highlightMoves(selectedPiece)
-
     drawSquares()
     drawPieces()
     
