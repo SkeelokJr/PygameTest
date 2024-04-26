@@ -331,6 +331,20 @@ def getMovesInPos(pos, file, rank, checkLegal):
             other = getPieceInPos(pos, file-1, rank+1) # up left
             if file >= 1 and rank <= 6 and (not other or not other["color"] == color):
                 moves.append((file-1,rank+1))
+            if not piece["hasMoved"]:
+                leftFile, rightFile = None, None
+                for l in range(1, file+1):
+                    test = getPieceInPos(pos, l, rank)
+                    if test and test["type"] == "rook" and test["color"] == "white" and not test["hasMoved"]:
+                        leftFile = l
+                    elif test:
+                        break
+                for r in range(1, file-1):
+                    test = getPieceInPos(pos, r, rank)
+                    if test and test["type"] == "rook" and test["color"] == "white" and not test["hasMoved"]:
+                        rightFile = r
+                    elif test:
+                        break
     if checkLegal:
         illegals = []
         for move in moves:
@@ -491,7 +505,6 @@ def isInCheck(pos, color):
                 return True
     return False
 
-
 def changeTurn():
     global playerTurn
     if playerTurn == "white":
@@ -517,7 +530,13 @@ def LMB_Down():
         selectedPiece = None
         selectedMoves = []
 
-setBoard()
+def testBoard():
+    createPiece("white", "king", 4, 0)
+    createPiece("white", "rook", 7, 0)
+    createPiece("white", "rook", 0, 0)
+
+#setBoard()
+testBoard()
 
 while running:
     events = pygame.event.get()
@@ -539,7 +558,6 @@ while running:
     drawSquares()
     drawPieces()
     
-
     pygame.display.flip()
 
     clock.tick(20)
