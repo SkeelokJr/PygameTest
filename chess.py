@@ -252,7 +252,7 @@ def getPieceInPos(pos, file, rank):
             return piece
     return None
 
-def getMovesInPos(pos, file, rank):
+def getMovesInPos(pos, file, rank, checkLegal):
     moves = []
     piece = getPieceInPos(pos, file, rank)
     file, rank = piece["file"], piece["rank"]
@@ -424,6 +424,13 @@ def getMovesInPos(pos, file, rank):
             other = getPieceInPos(pos, file-1, rank+1) # up left
             if file >= 1 and rank <= 6 and (not other or not other["color"] == color):
                 moves.append((file-1,rank+1))
+    if checkLegal:
+        for move in moves: 
+            temp = movePiece(Pieces.copy(), file, rank, move[0], move[1])
+            checks = checkForChecks(temp)
+            if (checks[0] and color == "white") or (checks[1] and color == "black"):
+                moves.remove(move)
+    print(moves)
     return moves
 
 def coordsFromFileRank(file, rank):
@@ -543,8 +550,9 @@ def getAllMoves(pos, color):
     for piece in pos:
         if piece["color"] == color:
             pFile, pRank = piece["file"], piece["rank"]
-            for move in getMovesInPos(pos, pFile, pRank):
-                allMoves.append((pFile, pRank, move[0], move[1]))
+            for move in getMovesInPos(pos, pFile, pRank, False):
+                if move:
+                    allMoves.append((pFile, pRank, move[0], move[1]))
     return allMoves
 
 def checkForChecks(pos):
@@ -555,7 +563,6 @@ def checkForChecks(pos):
             WK = (piece["file"], piece["rank"])
         elif piece["color"] == "black" and piece["type"] == "king":
             BK = (piece["file"], piece["rank"])
-    print(WK, BK)
     for move in getAllMoves(pos, "black"):
         if move[2] == WK[0] and move[3] == WK[1]:
             checkStatus[0] = True
@@ -580,7 +587,7 @@ def LMB_Down():
         selectedFile, selectedRank = mouseFile, mouseRank
     elif selectedPiece and getPieceAt(mouseFile,mouseRank) and not getPieceAt(mouseFile, mouseRank) == selectedPiece and getPieceAt(mouseFile,mouseRank)["color"] == playerTurn:
         selectedPiece = getPieceAt(mouseFile, mouseRank)
-    elif selectedPiece and (mouseFile, mouseRank) in getMovesInPos(Pieces, selectedFile, selectedRank):
+    elif selectedPiece and (mouseFile, mouseRank) in getMovesInPos(Pieces, selectedFile, selectedRank, True):
         Pieces = movePiece(Pieces, selectedFile, selectedRank, mouseFile, mouseRank)
         changeTurn()
         print(checkForChecks(Pieces))
