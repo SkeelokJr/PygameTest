@@ -85,6 +85,136 @@ def otherColor(color):
         return "black"
     return "white"
 
+def getSquaresControlled(pos, file, rank):
+    for piece in pos:
+        controlled = []
+        file, rank, type, color = piece["file"], piece["rank"], piece["type"], piece["color"]
+        match type:
+            case "pawn":
+                if color == "white":
+                    if file > 0 and rank < 7:
+                        controlled.append((file-1,rank+1))
+                    if file < 7 and rank < 7:
+                        controlled.append((file+1,rank+1))
+                else:
+                    if file > 0 and rank > 0:
+                        controlled.append((file-1,rank-1))
+                    if file < 7 and rank > 0:
+                        controlled.append((file+1,rank-1))
+            case "knight":
+                other = getPieceInPos(pos, file-2, rank+1)
+                if file >= 2 and rank <= 6:
+                    controlled.append((file-2, rank+1))
+                other = getPieceInPos(pos, file-1, rank+2)
+                if file >= 1 and rank <= 5:
+                    controlled.append((file-1, rank+2))
+                other = getPieceInPos(pos, file+2, rank+1)
+                if file <= 5 and rank <= 6:
+                    controlled.append((file+2, rank+1))
+                other = getPieceInPos(pos, file+1, rank+2)
+                if file <= 6 and rank <= 5:
+                    controlled.append((file+1, rank+2))
+                other = getPieceInPos(pos, file-2, rank-1)
+                if file >= 2 and rank >= 1:
+                    controlled.append((file-2, rank-1))
+                other = getPieceInPos(pos, file-1, rank-2)
+                if file >= 1 and rank >= 1:
+                    controlled.append((file-1, rank-2))
+                other = getPieceInPos(pos, file+2, rank-1)
+                if file <= 5 and rank >= 1:
+                    controlled.append((file+2, rank-1))
+                other = getPieceInPos(pos, file+1, rank-2)
+                if file <= 6 and rank >= 2:
+                    controlled.append((file+1, rank-2))
+            case "bishop":
+                for d in range(1, min(8-file, 8-rank)): # top right diagonal
+                    controlled.append((file+d, rank+d))
+                    if getPieceInPos(pos, file+d, rank+d):
+                        break
+                for d in range(1, min(8-file, rank+1)): # bottom right diagonal
+                    controlled.append((file+d, rank-d))
+                    if getPieceInPos(pos, file+d, rank-d):
+                        break
+                for d in range(1, min(file+1, 8-rank)): # top left diagonal
+                    controlled.append((file-d, rank+d))
+                    if getPieceInPos(pos, file-d, rank+d):
+                        break
+                for d in range(1, min(file+1, rank+1)): # bottom left diagonal
+                    controlled.append((file-d, rank-d))
+                    if getPieceInPos(pos, file-d, rank-d):
+                        break
+            case "rook":
+                for d in range(1, 8-rank): # get up moves
+                    controlled.append((file, rank+d))
+                    if getPieceInPos(pos, file,rank+d):
+                        break
+                for d in range(1, 8-file): # get moves right
+                    controlled.append((file+d, rank))
+                    if getPieceInPos(pos, file+d,rank):
+                        break
+                for d in range(1, rank+1): # get down moves
+                    controlled.append((file, rank-d))
+                    if getPieceInPos(pos, file,rank-d):
+                        break
+                for d in range(1, file+1): # get left moves
+                    controlled.append((file-d, rank))
+                    if getPieceInPos(pos, file-d,rank):
+                        break
+            case "queen":
+                for d in range(1, min(8-file, 8-rank)): # top right diagonal
+                    controlled.append((file+d, rank+d))
+                    if getPieceInPos(pos, file+d, rank+d):
+                        break
+                for d in range(1, min(8-file, rank+1)): # bottom right diagonal
+                    controlled.append((file+d, rank-d))
+                    if getPieceInPos(pos, file+d, rank-d):
+                        break
+                for d in range(1, min(file+1, 8-rank)): # top left diagonal
+                    controlled.append((file-d, rank+d))
+                    if getPieceInPos(pos, file-d, rank+d):
+                        break
+                for d in range(1, min(file+1, rank+1)): # bottom left diagonal
+                    controlled.append((file-d, rank-d))
+                    if getPieceInPos(pos, file-d, rank-d):
+                        break
+                for d in range(1, 8-rank): # get up moves
+                    controlled.append((file, rank+d))
+                    if getPieceInPos(pos, file,rank+d):
+                        break
+                for d in range(1, 8-file): # get moves right
+                    controlled.append((file+d, rank))
+                    if getPieceInPos(pos, file+d,rank):
+                        break
+                for d in range(1, rank+1): # get down moves
+                    controlled.append((file, rank-d))
+                    if getPieceInPos(pos, file,rank-d):
+                        break
+                for d in range(1, file+1): # get left moves
+                    controlled.append((file-d, rank))
+                    if getPieceInPos(pos, file-d,rank):
+                        break
+            case "king":
+                if rank <= 6: # up
+                    controlled.append((file,rank+1))
+                if file <= 6 and rank <= 6: # up right
+                    controlled.append((file+1,rank+1))
+                if file <= 6: # right
+                    controlled.append((file+1,rank))
+                if file <= 6 and rank >= 1: # down right
+                    controlled.append((file+1,rank-1))
+                if rank >= 1: # down
+                    controlled.append((file,rank-1))
+                if file >= 1 and rank >= 1: # down left
+                    controlled.append((file-1,rank-1))
+                if file >= 1: # left
+                    controlled.append((file-1,rank)) 
+                if file >= 1 and rank <= 6: # up left
+                    controlled.append((file-1,rank+1))
+
+
+def squareIsControlled(pos, testFile, testRank):
+    pass
+    
 def getMovesInPos(pos, file, rank, checkLegal):
     moves = []
     piece = getPieceInPos(pos, file, rank)
@@ -500,7 +630,7 @@ def updatePieceImages():
         piece["rect"].topleft = coordsFromFileRank(piece["file"], piece["rank"])
 
 def movePiece(pos, file, rank, newFile, newRank):
-    movedPiece, capturedPiece, castleRook = None, None, None
+    movedPiece, capturedPiece = None, None
     position = pos.copy()
     for piece in position:
         if piece["file"] == file and piece["rank"] == rank:
